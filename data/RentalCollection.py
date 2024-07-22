@@ -11,17 +11,18 @@ class RentalCollection:
     rentals: list[Rental]
 
     def to_pandas_df(self):
-        count_pre = len(self.rentals)
-        df =  pd.DataFrame([rental.to_dict() for rental in self.rentals if rental is not None and rental.price is not None and rental.zestimate is not None and rental.latitude is not None and rental.longitude is not None])
-        if (df.empty):
+        try:
+            df = pd.DataFrame([rental.to_dict() for rental in self.rentals if
+                               rental is not None and rental.price is not None and rental.zestimate is not None and rental.latitude is not None and rental.longitude is not None])
+            if (df.empty):
+                return None
+            df['color'] = df['Relative Value'].apply(lambda x: int(
+                255 * ((x - df['Relative Value'].min()) / (df['Relative Value'].max() - df['Relative Value'].min()))
+            ))
+            df['color'] = df['color'].apply(lambda x: [x, 255 - x, 0, 160])
+            return df
+        except Exception as e:
             return None
-        count_post = len(df['Address'])
-        #st.write(f"Filtered out {count_pre - count_post} rentals for missing data on price, zestimate, latitude, or longitude")
-        df['color'] = df['Relative Value'].apply(lambda x: int(
-            255 * ((x - df['Relative Value'].min()) / (df['Relative Value'].max() - df['Relative Value'].min()))
-        ))
-        df['color'] = df['color'].apply(lambda x: [x, 255 - x, 0, 160])
-        return df
 
     def filter_by_bedrooms(self, bedrooms: int):
         self.rentals = [rental for rental in self.rentals if rental.bedrooms == bedrooms]
@@ -36,4 +37,3 @@ class RentalCollection:
             return self.rentals[mid_lat].latitude, self.rentals[mid_lng].longitude
         except IndexError:
             return 0, 0
-
