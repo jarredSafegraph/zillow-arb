@@ -8,6 +8,7 @@ from api.ZillowApiCaller import ZillowApiCaller
 st.title('Zillow Zestimate Area Analysis')
 st.sidebar.title('Filters')
 
+
 zillow_api_caller = ZillowApiCaller()
 open_api_caller = OpenAICaller()
 city = st.sidebar.text_input('Enter city', placeholder='Hoboken')
@@ -64,7 +65,12 @@ if city and state and bedrooms and bathrooms and min_price and max_price and sea
 
 
     def convert_df(input_df):
-        df_html = input_df.to_html(index=False, escape=False, formatters=dict())
+        def make_google_search_link(address):
+            query = address.replace(' ', '+')
+            url = f'https://www.google.com/search?q={query}'
+            return f'<a href="{url}" target="_blank">{address}</a>'
+
+        df_html = input_df.to_html(index=False, escape=False, formatters={'Address': make_google_search_link})
 
         html_with_container = f'''
             <html>
@@ -85,6 +91,7 @@ if city and state and bedrooms and bathrooms and min_price and max_price and sea
                         top: 0;
                         background: #ddd;
                     }}
+                    a {{ color: blue; text-decoration: underline; }}
                 </style>
             </head>
             <body>
@@ -108,6 +115,7 @@ if city and state and bedrooms and bathrooms and min_price and max_price and sea
             </html>
             '''
         return html_with_container
+
 
     with st.spinner('Loading summary...'):
         summary = open_api_caller.summarize_df(df_sorted)
