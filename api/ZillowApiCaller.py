@@ -31,7 +31,7 @@ class ZillowApiCaller():
             "bedsMax": f"{beds_max}",
             "page": page,
         }
-        print(f"running for {querydict}")
+        #print(f"running for {querydict}")
         return querydict
 
     # Define the rate limit exception handler
@@ -47,7 +47,7 @@ class ZillowApiCaller():
             "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
         }
         response = requests.get(url, headers=headers, params=querydict)
-        response.raise_for_status()  # Raise an exception for HTTP error codes
+        response.raise_for_status()
         return json.loads(response.text)
 
 
