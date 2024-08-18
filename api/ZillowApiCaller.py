@@ -47,7 +47,7 @@ class ZillowApiCaller():
             "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
         }
         response = requests.get(url, headers=headers, params=querydict)
-        response.raise_for_status()
+        response.raise_for_status()  # Raise an exception for HTTP error codes
         return json.loads(response.text)
 
 
