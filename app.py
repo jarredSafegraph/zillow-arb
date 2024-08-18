@@ -11,21 +11,23 @@ st.sidebar.title('Filters')
 
 zillow_api_caller = ZillowApiCaller()
 open_api_caller = OpenAICaller()
-city = st.sidebar.text_input('Enter city', placeholder='Hoboken')
-state = st.sidebar.text_input('Enter state', placeholder='NJ')
-bedrooms = st.sidebar.number_input('Bedrooms', value=1, min_value=1)
-bathrooms = st.sidebar.number_input('Bathrooms', value=1, min_value=1)
+city = st.sidebar.text_input('Enter City', placeholder='Hoboken')
+state = st.sidebar.text_input('Enter State', placeholder='NJ')
+min_bedrooms = st.sidebar.number_input('Bedrooms', value=1, min_value=1)
+exact_bedrooms_checkbox = st.sidebar.checkbox('Exact number of bedrooms')
+min_bathrooms = st.sidebar.number_input('Bathrooms', value=1, min_value=1)
+exact_bathrooms_checkbox = st.sidebar.checkbox('Exact number of bathrooms')
 min_price = st.sidebar.number_input('Min price', value=2500, min_value=1)
 max_price = st.sidebar.number_input('Max price', value=4000, min_value=1)
 search_button = st.sidebar.button('Search')
 
-if city and state and bedrooms and bathrooms and min_price and max_price and search_button:
-    st.write(f"Fetching data for {city}, {state} with {bedrooms} bedrooms, {bathrooms} bathrooms.")
+if city and state and min_bedrooms and min_bathrooms and min_price and max_price and search_button:
+    bedrooms_text = f"exactly {min_bedrooms}" if exact_bedrooms_checkbox else f"at least {min_bedrooms}"
+    bathrooms_text = f"exactly {min_bathrooms}" if exact_bathrooms_checkbox else f"at least {min_bathrooms}"
+    st.write(f"Fetching data for {city}, {state} with {bedrooms_text} bedrooms, {bathrooms_text} bathrooms.")
     rental_collection = zillow_api_caller.fetch_pages_for_city(city=city, state=state, min_price=min_price,
-                                                               max_price=max_price, baths_min=bathrooms,
-                                                               beds_min=bedrooms)
-    rental_collection.filter_by_bedrooms(bedrooms)
-    rental_collection.filter_by_bathrooms(bathrooms)
+                                                               max_price=max_price, baths_min=min_bathrooms,
+                                                               beds_min=min_bedrooms, exact_bathrooms=exact_bathrooms_checkbox, exact_bedrooms=exact_bedrooms_checkbox)
     rental_collection_lat_lng = rental_collection.get_center_of_lat_lng()
     df = rental_collection.to_pandas_df()
 
@@ -128,7 +130,7 @@ if city and state and bedrooms and bathrooms and min_price and max_price and sea
     st.download_button(
         "Download",
         df_sorted.to_csv(index=False).encode('utf-8'),
-        f"{city}_{state}_{bedrooms}_{bathrooms}_{current_date}.csv",
+        f"{city}_{state}_{min_bedrooms}_{exact_bedrooms_checkbox}_{min_bathrooms}_{exact_bathrooms_checkbox}_{current_date}.csv",
         "text/csv",
         key='download-csv'
     )
