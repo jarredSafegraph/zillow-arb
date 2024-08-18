@@ -13,13 +13,13 @@ class ZillowApiCaller():
 
     def make_query_dict(self, page, city, state, min_price, max_price, baths_min, beds_min, exact_bathrooms, exact_bedrooms):
         if exact_bathrooms:
-            beds_max = beds_min
-        else:
-            beds_max = 99
-        if exact_bedrooms:
             baths_max = baths_min
         else:
             baths_max = 99
+        if exact_bedrooms:
+            beds_max = beds_min
+        else:
+            beds_max = 99
         querydict = {
             "location": f"{city}, {state}",
             "status_type": "ForRent",
@@ -31,7 +31,7 @@ class ZillowApiCaller():
             "bedsMax": f"{beds_max}",
             "page": page,
         }
-
+        print(f"running for {querydict}")
         return querydict
 
     # Define the rate limit exception handler
@@ -47,7 +47,7 @@ class ZillowApiCaller():
             "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
         }
         response = requests.get(url, headers=headers, params=querydict)
-        response.raise_for_status()
+        response.raise_for_status()  # Raise an exception for HTTP error codes
         return json.loads(response.text)
 
 
