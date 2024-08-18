@@ -67,4 +67,9 @@ class ZillowApiCaller():
         all_props = [json_response.get("props") for json_response in json_responses]
         all_props = [props for props in all_props if props is not None]
         all_props = [prop for props in all_props for prop in props]
-        return RentalCollection(rentals=[Rental.json_contructor(json_data) for json_data in all_props])
+        collection = RentalCollection(rentals=[Rental.json_contructor(json_data) for json_data in all_props])
+        if exact_bedrooms:
+            collection.filter_by_bedrooms(beds_min)
+        if exact_bathrooms:
+            collection.filter_by_bathrooms(baths_min)
+        return collection
