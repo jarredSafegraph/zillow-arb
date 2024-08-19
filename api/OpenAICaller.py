@@ -11,7 +11,7 @@ class OpenAICaller():
         messages = [
             {
                 "role": "system",
-                "content": "Please provide a summary on the properties noting that a lower relative value is better. Things to note: how many have a negative relative value, how many have a positive relative value, and lowest 3 relative values."
+                "content": "Please provide a summary on the properties noting that a lower relative value is better. Things to note: how many have a negative relative value, how many have a positive relative value, and lowest 3 relative values. Please be concise"
             },
             {
                 "role": "user",
