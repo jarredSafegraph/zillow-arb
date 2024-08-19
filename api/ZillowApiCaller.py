@@ -1,13 +1,32 @@
-import json
-from time import sleep
-
-import backoff as backoff
-import requests
-
 from data.Rental import Rental
 from data.RentalCollection import RentalCollection
 import streamlit as st
+import functools
+import time
 from requests.exceptions import HTTPError
+import backoff
+import requests
+import json
+
+class ExpiringCache:
+    def __init__(self, max_age_seconds):
+        self.max_age_seconds = max_age_seconds
+        self.cache = {}
+
+    def __call__(self, func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            key = (args, tuple(sorted(kwargs.items())))
+            if key in self.cache:
+                result, timestamp = self.cache[key]
+                if time.time() - timestamp < self.max_age_seconds:
+                    return result
+            result = func(*args, **kwargs)
+            self.cache[key] = (result, time.time())
+            return result
+
+        return wrapped
+
 class ZillowApiCaller():
     api_key = st.secrets["zillow_api_key"]
 
@@ -34,20 +53,21 @@ class ZillowApiCaller():
         #print(f"running for {querydict}")
         return querydict
 
-    # Define the rate limit exception handler
     @backoff.on_exception(backoff.expo, HTTPError,
                           max_tries=5,
                           giveup=lambda e: e.response is not None and e.response.status_code != 429)
+    @ExpiringCache(max_age_seconds=600)  # 10 minutes = 600 seconds
     def _get_props_by_page(self, page, city, state, min_price, max_price, baths_min, beds_min, exact_bathrooms,
                            exact_bedrooms):
         url = "https://zillow-com1.p.rapidapi.com/propertyExtendedSearch"
-        querydict = self.make_query_dict(page, city, state, min_price, max_price, baths_min, beds_min, exact_bathrooms, exact_bedrooms)
+        querydict = self.make_query_dict(page, city, state, min_price, max_price, baths_min, beds_min, exact_bathrooms,
+                                         exact_bedrooms)
         headers = {
             "X-RapidAPI-Key": self.api_key,
             "X-RapidAPI-Host": "zillow-com1.p.rapidapi.com"
         }
         response = requests.get(url, headers=headers, params=querydict)
-        response.raise_for_status()  # Raise an exception for HTTP error codes
+        response.raise_for_status()
         return json.loads(response.text)
 
 
